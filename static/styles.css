@@ -1,0 +1,44 @@
+body {
+    font-family: 'Space Grotesk', sans-serif;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    background-color: #f0f0f0;
+}
+
+header {
+    background-color: #4CAF50;
+    color: white;
+    padding: 1em 0;
+}
+
+h1 {
+    margin: 0;
+}
+
+main {
+    padding: 2em;
+}
+
+.btn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 1em 2em;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1em;
+    border-radius: 5px; /* Adds smooth edges */
+}
+
+.btn:hover {
+    background-color: #45a049;
+}
+
+
+
+
+p {
+    font-size: 1.2em;
+}
+

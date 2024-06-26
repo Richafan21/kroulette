@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading...</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .loading-bar {
+            width: 50%;
+            background-color: #f3f3f3;
+            border-radius: 5px;
+            margin: 20px auto;
+            position: relative;
+        }
+        .loading-bar-fill {
+            height: 20px;
+            width: 0;
+            background-color: #4CAF50;
+            border-radius: 5px;
+            transition: width 0.5s;
+        }
+        .loading-bar-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            top: 0;
+            left: 0;
+            line-height: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Kroulette</h1>
+    </header>
+    <main>
+        <h2>Loading your songs, please wait...</h2>
+        <div class="loading-bar">
+            <div class="loading-bar-fill" id="loading-bar-fill"></div>
+            <div class="loading-bar-text" id="loading-bar-text">0%</div>
+        </div>
+    </main>
+    <script>
+        function checkLoadingStatus() {
+            fetch('{{ url_for("check_loading_status") }}')
+                .then(response => response.json())
+                .then(data => {
+                    const loadingBarFill = document.getElementById('loading-bar-fill');
+                    const loadingBarText = document.getElementById('loading-bar-text');
+                    let width = data.progress;
+                    width = Math.min(width, 100);
+                    loadingBarFill.style.width = width + '%';
+                    loadingBarText.textContent = Math.round(width) + '%';
+
+                    if (data.tracks_loaded && width >= 100) {
+                        window.location.href = '{{ url_for("home") }}';
+                    } else {
+                        setTimeout(checkLoadingStatus, 1000);
+                    }
+                });
+        }
+
+        checkLoadingStatus();
+    </script>
+</body>
+</html>

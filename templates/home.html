@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kroulette - Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .song-info {
+            margin-bottom: 20px;
+        }
+        .song-image {
+            margin-bottom: 20px;
+        }
+        .logout-btn {
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Kroulette</h1>
+    </header>
+    <main>
+        <h2>Welcome!</h2>
+        <form action="{{ url_for('get_random_song') }}" method="get">
+            <button type="submit" class="btn">Roll a Random Song</button>
+        </form>
+        {% if random_track %}
+            <div class="song-info">
+                <p>Random Song: {{ random_track }}</p>
+                <p>Artist: {{ artist_name }}</p>
+                <p>Found in Playlist: {{ playlist_name }}</p>
+            </div>
+            <div class="song-image">
+                {% if track_image_url %}
+                    <img src="{{ track_image_url }}" alt="Track Cover">
+                {% else %}
+                    <p>No image available</p>
+                {% endif %}
+            </div>
+            <div class="logout-btn">
+                <a href="{{ url_for('logout') }}" class="btn">Log Out</a>
+            </div>
+        {% endif %}
+    </main>
+</body>
+</html>
