@@ -1,4 +1,4 @@
-from flask import Flask, redirect, url_for, session, request, render_template, jsonify
+from flask import Flask, redirect, url_for, session, request, render_template, jsonify, make_response
 import requests
 import random
 import string
@@ -22,27 +22,55 @@ def generate_session_id():
 
 def fetch_all_tracks(access_token, session_id):
     headers = {'Authorization': f'Bearer {access_token}'}
-    response = requests.get('https://api.spotify.com/v1/me/playlists', headers=headers)
-    playlists = response.json().get('items', [])
+    url = 'https://api.spotify.com/v1/me/playlists?limit=50'
+    playlists = []
+
+    # Fetch all playlists with pagination
+    while url:
+        response = requests.get(url, headers=headers)
+        if response.status_code != 200:
+            print(f"Error fetching playlists: {response.status_code} - {response.text}")
+            loading_status[session_id]['tracks_loaded'] = True
+            return
+        data = response.json()
+        playlists.extend(data.get('items', []))
+        url = data.get('next')  # Get the next page of playlists
 
     all_tracks = []
     total_playlists = len(playlists)
     loaded_playlists = 0
 
+    # Fetch tracks for each playlist
     for playlist in playlists:
         playlist_name = playlist['name']
         playlist_id = playlist['id']
-        tracks_url = f'https://api.spotify.com/v1/playlists/{playlist_id}/tracks'
-        tracks_response = requests.get(tracks_url, headers=headers)
-        tracks = tracks_response.json().get('items', [])
-        for track in tracks:
-            track_info = track['track']
-            if track_info['preview_url']:
-                track_info['playlist_name'] = playlist_name  # Add playlist name to track info
-                all_tracks.append(track_info)
+        url = f'https://api.spotify.com/v1/playlists/{playlist_id}/tracks?limit=100'
+
+        while url:
+            response = requests.get(url, headers=headers)
+            if response.status_code == 429:  # Rate limit hit
+                retry_after = int(response.headers.get('Retry-After', 1))
+                print(f"Rate limit hit. Retrying after {retry_after} seconds...")
+                time.sleep(retry_after)
+                continue
+            if response.status_code != 200:
+                print(f"Error fetching tracks for playlist {playlist_name}: {response.status_code} - {response.text}")
+                break
+            data = response.json()
+            for track in data.get('items', []):
+                track_info = track['track']
+                if track_info:  # No longer depend on preview_url
+                    track_info['playlist_name'] = playlist_name
+                    all_tracks.append(track_info)
+            url = data.get('next')  # Get the next page of tracks
+
+        # Update progress
         loaded_playlists += 1
         loading_status[session_id]['progress'] = (loaded_playlists / total_playlists) * 100
+        print(f"Progress: {loading_status[session_id]['progress']}% - Tracks loaded so far: {len(all_tracks)}")
 
+    # Save all tracks and mark loading as complete
+    print(f"Total tracks fetched: {len(all_tracks)}")
     loading_status[session_id]['all_tracks'] = all_tracks
     loading_status[session_id]['tracks_loaded'] = True
 
@@ -52,14 +80,14 @@ def index():
 
 @app.route('/login')
 def login():
-    # Clear the session to start a fresh login flow
     session.clear()
     auth_url = "https://accounts.spotify.com/authorize"
     params = {
         'client_id': CLIENT_ID,
         'response_type': 'code',
         'redirect_uri': REDIRECT_URI,
-        'scope': SCOPE
+        'scope': SCOPE,
+        'show_dialog': 'true'
     }
     return redirect(f"{auth_url}?{urlencode(params)}")
 
@@ -100,22 +128,45 @@ def check_loading_status():
         return jsonify({'tracks_loaded': False, 'progress': 0})
     
     status = loading_status.get(session_id, {'tracks_loaded': False, 'progress': 0})
-    return jsonify(status)
+    return jsonify({
+        'tracks_loaded': status.get('tracks_loaded', False),
+        'progress': status.get('progress', 0),
+        'message': f"Loaded {int(status.get('progress', 0))}% of playlists"
+    })
+
+@app.route('/logout')
+def logout():
+    session.pop('access_token', None)
+    session.pop('session_id', None)
+    session.clear()
+    session.modified = True
+    response = redirect(url_for('index'))
+    response.set_cookie('session', '', expires=0)
+    return response
 
 @app.route('/home')
 def home():
-    return render_template('home.html')
+    print("Session Data:", session)
+    print("Loading Status:", loading_status.get(session.get('session_id'), {}))
+    if 'access_token' not in session:
+        return redirect(url_for('index'))
+    
+    response = make_response(render_template('home.html'))
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 @app.route('/get_random_song')
 def get_random_song():
     session_id = session.get('session_id')
     if not session_id:
-        return render_template('home.html', random_track="Tracks are still loading, please try again later.", track_image_url=None, artist_name=None, playlist_name=None)
-    
+        return render_template('home.html', random_track="Session expired. Please log in again.", track_image_url=None, artist_name=None, playlist_name=None)
+
     status = loading_status.get(session_id, {})
     all_tracks = status.get('all_tracks', [])
     if not all_tracks:
-        return render_template('home.html', random_track="Tracks are still loading, please try again later.", track_image_url=None, artist_name=None, playlist_name=None)
+        return render_template('home.html', random_track="Tracks are still loading or failed to load. Please try again later.", track_image_url=None, artist_name=None, playlist_name=None)
     
     random_track_info = random.choice(all_tracks)
     random_track_name = random_track_info['name']
@@ -123,11 +174,6 @@ def get_random_song():
     artist_name = random_track_info['artists'][0]['name'] if random_track_info['artists'] else "Unknown Artist"
     playlist_name = random_track_info['playlist_name']
     return render_template('home.html', random_track=random_track_name, track_image_url=track_image_url, artist_name=artist_name, playlist_name=playlist_name)
-
-@app.route('/logout')
-def logout():
-    session.clear()  # Clear the session completely
-    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run(debug=True)
