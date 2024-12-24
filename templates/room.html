@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Kroulette Room</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .room-info {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            text-align: center;
+        }
+        .room-code {
+            font-size: 2em;
+            font-weight: bold;
+            color: #1DB954;
+        }
+        .message {
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .button-container {
+            margin: 20px 0;
+        }
+        .button {
+            background-color: #1DB954;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 10px;
+        }
+        .button:hover {
+            background-color: #1ed760;
+        }
+        .button:disabled {
+            background-color: #b3b3b3;
+            cursor: not-allowed;
+        }
+        #song-display {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="room-info">
+            <h2>Room Code: <span class="room-code">{{ room_code }}</span></h2>
+            <p>Share this code with your friend to join!</p>
+            <p>Users in room: <span id="user-count">1</span></p>
+        </div>
+
+        <div id="waiting-message" class="message">
+            Waiting for another person to join...
+        </div>
+
+        <div class="button-container">
+            <button id="roll-btn" class="button" disabled>Roll Song!</button>
+            <button id="leave-btn" class="button">Leave Room</button>
+        </div>
+
+        <div id="song-display" style="display: none;">
+            <h3>Selected Song:</h3>
+            <div id="song-name"></div>
+            <div id="artist-name"></div>
+            <div id="playlist-name"></div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const roomCode = '{{ room_code }}';
+        const userCountElement = document.getElementById('user-count');
+        const waitingMessage = document.getElementById('waiting-message');
+        const rollButton = document.getElementById('roll-btn');
+        const leaveButton = document.getElementById('leave-btn');
+        const songDisplay = document.getElementById('song-display');
+
+        socket.on('connect', () => {
+            console.log('Connected to server');
+            socket.emit('join_room', { room_code: roomCode }, (response) => {
+                if (response.error) {
+                    alert(response.error);
+                    window.location.href = '/';
+                } else {
+                    updateUserCount(response.user_count);
+                }
+            });
+        });
+
+        socket.on('user_joined', (data) => {
+            console.log('User joined:', data);
+            updateUserCount(data.user_count);
+        });
+
+        socket.on('user_left', (data) => {
+            console.log('User left:', data);
+            updateUserCount(data.user_count);
+        });
+
+        socket.on('song_rolled', (data) => {
+            console.log('Song rolled:', data);
+            if (data.song) {
+                document.getElementById('song-name').textContent = data.song.name;
+                document.getElementById('artist-name').textContent = data.song.artist;
+                document.getElementById('playlist-name').textContent = `From playlist: ${data.song.playlist}`;
+                songDisplay.style.display = 'block';
+            }
+        });
+
+        function updateUserCount(count) {
+            userCountElement.textContent = count;
+            if (count >= 2) {
+                waitingMessage.style.display = 'none';
+                rollButton.disabled = false;
+            } else {
+                waitingMessage.style.display = 'block';
+                rollButton.disabled = true;
+            }
+        }
+
+        rollButton.addEventListener('click', () => {
+            socket.emit('roll', { room_code: roomCode }, (response) => {
+                if (response.error) {
+                    alert(response.error);
+                }
+            });
+        });
+
+        leaveButton.addEventListener('click', () => {
+            socket.emit('leave_room', { room_code: roomCode });
+            window.location.href = '/';
+        });
+
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            socket.emit('leave_room', { room_code: roomCode });
+        });
+    </script>
+</body>
+</html>

@@ -12,8 +12,56 @@
         .song-image {
             margin-bottom: 20px;
         }
-        .logout-btn {
-            margin-top: 40px;
+        .room-options {
+            margin: 40px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        .join-form {
+            margin: 20px 0;
+        }
+        .or-divider {
+            margin: 20px 0;
+            color: #666;
+        }
+        .container {
+            text-align: center;
+        }
+        .album-cover {
+            width: 100px;
+            height: 100px;
+            margin: 20px;
+        }
+        .button-container {
+            margin-top: 20px;
+        }
+        .action-button {
+            padding: 10px 20px;
+            font-size: 1em;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .artist-name {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .playlist-name {
+            font-size: 1em;
+            color: #666;
+        }
+        .error-message {
+            color: red;
+            font-size: 1em;
+        }
+        .create-room {
+            margin-bottom: 20px;
+        }
+        .join-room {
+            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -23,26 +71,88 @@
     </header>
     <main>
         <h2>Welcome!</h2>
-        <form action="{{ url_for('get_random_song') }}" method="get">
-            <button type="submit" class="btn">Roll a Random Song</button>
-        </form>
+        
+        <div class="container">
+            <div class="room-options">
+                <div class="create-room">
+                    <h2>Create a Room</h2>
+                    <a href="{{ url_for('create_room') }}" class="btn">Create New Room</a>
+                </div>
+
+                <div class="join-room">
+                    <h2>Join a Room</h2>
+                    <div class="join-form">
+                        <input type="text" id="room-code" placeholder="Enter Room Code" maxlength="6">
+                        <button onclick="joinRoom()" class="btn">Join Room</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {% if random_track %}
-            <div class="song-info">
-                <p>Random Song: {{ random_track }}</p>
-                <p>Artist: {{ artist_name }}</p>
-                <p>Found in Playlist: {{ playlist_name }}</p>
-            </div>
-            <div class="song-image">
-                {% if track_image_url %}
-                    <img src="{{ track_image_url }}" alt="Track Cover">
-                {% else %}
-                    <p>No image available</p>
-                {% endif %}
-            </div>
-            <div class="logout-btn">
-                <a href="{{ url_for('logout') }}" class="btn">Log Out</a>
+            <div class="container">
+                <h1>Your Random Song</h1>
+                <div id="song-display">
+                    <div class="song-info">
+                        <img src="{{ track_image_url }}" alt="Track Cover" class="album-cover">
+                        <h2>{{ random_track }}</h2>
+                        <p class="artist-name">{{ artist_name }}</p>
+                        <p class="playlist-name">From playlist: {{ playlist_name }}</p>
+                    </div>
+                </div>
+                <div class="button-container">
+                    <button id="rerollButton" class="action-button">Roll Again!</button>
+                    <a href="/" class="action-button">Back to Start</a>
+                </div>
             </div>
         {% endif %}
+
+        <div class="logout-btn">
+            <a href="{{ url_for('logout') }}" class="btn">Log Out</a>
+        </div>
     </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        function joinRoom() {
+            const roomCode = document.getElementById('room-code').value.toUpperCase();
+            if (roomCode) {
+                window.location.href = '/join/' + roomCode;
+            } else {
+                alert('Please enter a room code');
+            }
+        }
+
+        const socket = io();
+        const rerollButton = document.getElementById('rerollButton');
+        const songDisplay = document.getElementById('song-display');
+
+        rerollButton.addEventListener('click', () => {
+            rerollButton.disabled = true;
+            rerollButton.textContent = 'Rolling...';
+            socket.emit('reroll');
+        });
+
+        socket.on('new_track', (data) => {
+            songDisplay.innerHTML = `
+                <div class="song-info">
+                    <img src="${data.album.images[0]?.url || ''}" alt="Album Cover" class="album-cover">
+                    <h2>${data.name}</h2>
+                    <p class="artist-name">${data.artists[0].name}</p>
+                    <p class="playlist-name">From playlist: ${data.playlist_name}</p>
+                </div>
+            `;
+            rerollButton.disabled = false;
+            rerollButton.textContent = 'Roll Again!';
+        });
+
+        socket.on('error', (error) => {
+            songDisplay.innerHTML += `
+                <div class="error-message">${error}</div>
+            `;
+            rerollButton.disabled = false;
+            rerollButton.textContent = 'Roll Again!';
+        });
+    </script>
 </body>
 </html>

@@ -1,68 +1,147 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Loading...</title>
+    <title>Loading Tracks - Kroulette</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <style>
-        .loading-bar {
-            width: 50%;
-            background-color: #f3f3f3;
-            border-radius: 5px;
-            margin: 20px auto;
-            position: relative;
+        body {
+            background-color: #121212;
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
         }
-        .loading-bar-fill {
-            height: 20px;
-            width: 0;
-            background-color: #4CAF50;
-            border-radius: 5px;
-            transition: width 0.5s;
-        }
-        .loading-bar-text {
-            position: absolute;
-            width: 100%;
+
+        .loading-container {
+            max-width: 600px;
+            margin: 50px auto;
             text-align: center;
-            top: 0;
-            left: 0;
-            line-height: 20px;
-            font-size: 14px;
+            padding: 20px;
+            background-color: #282828;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #404040;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #1DB954;
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+        .status-text {
+            color: #b3b3b3;
+            margin: 10px 0;
+        }
+        .error-message {
+            color: #ff4444;
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: rgba(255, 68, 68, 0.1);
+            display: none;
+        }
+
+        /* Loading animation */
+        .loading-spinner {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(29, 185, 84, 0.3);
+            border-radius: 50%;
+            border-top-color: #1DB954;
+            animation: spin 1s ease-in-out infinite;
+            margin: 20px 0;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .retry-button {
+            background-color: #1DB954;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .retry-button:hover {
+            background-color: #1ed760;
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>Kroulette</h1>
-    </header>
-    <main>
-        <h2>Loading your songs, please wait...</h2>
-        <div class="loading-bar">
-            <div class="loading-bar-fill" id="loading-bar-fill"></div>
-            <div class="loading-bar-text" id="loading-bar-text">0%</div>
+    <div class="loading-container">
+        <h1>Loading Your Tracks</h1>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
         </div>
-    </main>
+        <div class="status-text">
+            <p>Progress: <span id="progress">0</span>%</p>
+            <p>Tracks found: <span id="track-count">0</span></p>
+            <p>Current playlist: <span id="current-playlist">-</span></p>
+        </div>
+        <div class="loading-spinner"></div>
+        <div class="error-message" id="error-message"></div>
+    </div>
+
     <script>
         function checkLoadingStatus() {
-            fetch('{{ url_for("check_loading_status") }}')
+            fetch('/check_loading_status')
                 .then(response => response.json())
                 .then(data => {
-                    const loadingBarFill = document.getElementById('loading-bar-fill');
-                    const loadingBarText = document.getElementById('loading-bar-text');
-                    let width = data.progress;
-                    width = Math.min(width, 100);
-                    loadingBarFill.style.width = width + '%';
-                    loadingBarText.textContent = Math.round(width) + '%';
-
-                    if (data.tracks_loaded && width >= 100) {
-                        window.location.href = '{{ url_for("home") }}';
-                    } else {
-                        setTimeout(checkLoadingStatus, 1000);
+                    if (data.error) {
+                        document.getElementById('error-message').textContent = data.error;
+                        document.getElementById('error-message').style.display = 'block';
+                        if (data.should_reload) {
+                            setTimeout(() => window.location.href = '/', 3000);
+                        }
+                        return;
                     }
+
+                    if (data.tracks_loaded) {
+                        window.location.href = data.redirect_url;
+                        return;
+                    }
+
+                    // Update progress
+                    const progress = data.progress || 0;
+                    const trackCount = data.track_count || 0;
+                    const currentPlaylist = data.current_playlist || '';
+                    
+                    document.getElementById('progress').textContent = progress;
+                    document.getElementById('progress-fill').style.width = `${progress}%`;
+                    document.getElementById('track-count').textContent = trackCount;
+                    if (currentPlaylist) {
+                        document.getElementById('current-playlist').textContent = currentPlaylist;
+                    }
+
+                    // Continue checking if not done
+                    setTimeout(checkLoadingStatus, 1000);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('error-message').textContent = 'Error checking loading status';
+                    document.getElementById('error-message').style.display = 'block';
                 });
         }
 
-        checkLoadingStatus();
+        // Start checking when page loads
+        window.onload = checkLoadingStatus;
     </script>
 </body>
 </html>

@@ -1,18 +1,32 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kroulette</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Kroulette - Spotify Random Song Picker</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <header>
+    <div class="container">
         <h1>Kroulette</h1>
-    </header>
-    <main>
-        <h2>Welcome to Kroulette!</h2>
-        <a href="{{ url_for('login') }}" class="btn">Log in with Spotify</a>
-    </main>
+        <p>Your Random Spotify Song Picker</p>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="error-message">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% if logged_in %}
+        <div class="button-container">
+            <a href="/home" class="action-button">Continue as Current User</a>
+            <a href="/logout" class="action-button secondary">Switch Account</a>
+        </div>
+        {% else %}
+        <div class="button-container">
+            <a href="/login" class="action-button">Login with Spotify</a>
+        </div>
+        {% endif %}
+    </div>
 </body>
 </html>
