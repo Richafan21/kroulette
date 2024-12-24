@@ -227,7 +227,8 @@ def fetch_all_tracks(session_id, access_token):
                                 'name': track['name'],
                                 'artists': [artist['name'] for artist in track['artists']],
                                 'album': track['album']['name'],
-                                'uri': track['uri']
+                                'uri': track['uri'],
+                                'playlist': playlist_name  # Add playlist name to track info
                             })
                             
             except Exception as e:
@@ -534,9 +535,12 @@ def on_roll(data):
         
         # Get track IDs for each user
         user_track_ids = {}
+        user_track_info = {}  # Store full track info per user
         for user_id in room['users']:
             if user_id in user_tracks:
                 user_track_ids[user_id] = {track['id'] for track in user_tracks[user_id]}
+                # Create a mapping of track_id to track info for this user
+                user_track_info[user_id] = {track['id']: track for track in user_tracks[user_id]}
                 app.logger.info(f"User {user_id} has {len(user_track_ids[user_id])} tracks")
             else:
                 app.logger.error(f"No tracks found for user {user_id}")
@@ -546,11 +550,22 @@ def on_roll(data):
         shared_track_ids = set.intersection(*user_track_ids.values())
         app.logger.info(f"Found {len(shared_track_ids)} shared tracks")
         
-        # Get full track info for shared tracks
+        # Get full track info for shared tracks with playlist info from both users
         shared_tracks = []
-        for track in user_tracks[session_id]:  # Use current user's track info
-            if track['id'] in shared_track_ids:
-                shared_tracks.append(track)
+        for track_id in shared_track_ids:
+            # Get base track info from first user
+            first_user_id = list(user_track_info.keys())[0]
+            track_base = user_track_info[first_user_id][track_id].copy()
+            
+            # Collect playlist names from all users
+            playlists = []
+            for user_id, track_map in user_track_info.items():
+                if track_map[track_id]['playlist']:
+                    playlists.append(f"{track_map[track_id]['playlist']}")
+            
+            # Add combined playlist info
+            track_base['playlists'] = playlists
+            shared_tracks.append(track_base)
         
         room['shared_tracks'] = shared_tracks
         app.logger.info(f"Stored {len(shared_tracks)} shared tracks in room")

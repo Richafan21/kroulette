@@ -116,8 +116,11 @@
             console.log('Song rolled:', data);
             if (data.song) {
                 document.getElementById('song-name').textContent = data.song.name;
-                document.getElementById('artist-name').textContent = data.song.artist;
-                document.getElementById('playlist-name').textContent = `From playlist: ${data.song.playlist}`;
+                document.getElementById('artist-name').textContent = data.song.artists.join(', ');
+                const playlistText = data.song.playlists && data.song.playlists.length > 0 
+                    ? `Found in playlists: ${data.song.playlists.join(' and ')}` 
+                    : 'Playlist information not available';
+                document.getElementById('playlist-name').textContent = playlistText;
                 songDisplay.style.display = 'block';
             }
         });
