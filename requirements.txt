@@ -5,3 +5,4 @@ python-engineio==4.8.0
 python-socketio==5.10.0
 eventlet==0.33.3
 werkzeug==2.3.7
+spotipy==2.24.0
