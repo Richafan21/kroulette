@@ -1,4 +1,5 @@
 import logging
+import os
 
 # Configure logging
 logging.basicConfig(
@@ -59,6 +60,9 @@ active_rooms = {}  # Store active room info
 user_tracks = {}  # Store tracks for each session
 
 def get_redirect_uri(port=5000):
+    # Check if running on Render
+    if os.environ.get('RENDER'):
+        return 'https://kroulette.onrender.com/callback'
     return f'http://127.0.0.1:{port}/callback'
 
 def get_spotify_oauth():
@@ -672,11 +676,8 @@ def get_spotify_client():
 
 if __name__ == '__main__':
     import socket
-    port = 5000
     
-    # Configure Flask logger to use the same format
-    app.logger.handlers = []
-    for handler in logging.getLogger().handlers:
-        app.logger.addHandler(handler)
+    # Use Render's PORT environment variable if available
+    port = int(os.environ.get('PORT', 5000))
     
-    socketio.run(app, host='127.0.0.1', port=port, debug=True, use_reloader=False)
+    socketio.run(app, host='0.0.0.0', port=port)
