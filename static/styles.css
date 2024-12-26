@@ -264,3 +264,17 @@ p {
     color: #1DB954;
     font-weight: 600;
 }
+
+/* Footer Styles */
+.footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: #b3b3b3;
+    text-align: center;
+    padding: 10px;
+    font-size: 0.8em;
+    z-index: 1000;
+}

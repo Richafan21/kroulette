@@ -54,6 +54,14 @@
             background-color: rgba(255, 255, 255, 0.1);
             border-radius: 10px;
         }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            padding: 10px;
+            background-color: #f5f5f5;
+        }
     </style>
 </head>
 <body>
@@ -117,7 +125,11 @@
             if (data.song) {
                 document.getElementById('song-name').textContent = data.song.name;
                 document.getElementById('artist-name').textContent = data.song.artist;
-                document.getElementById('playlist-name').textContent = `From playlist: ${data.song.playlist}`;
+                
+                // Display playlists
+                const playlistNameElement = document.getElementById('playlist-name');
+                playlistNameElement.innerHTML = `Playlists: ${data.song.playlists}`;
+                
                 songDisplay.style.display = 'block';
             }
         });
@@ -153,3 +165,7 @@
     </script>
 </body>
 </html>
+
+<div class="footer">
+    2024 Kroulette by Richard Fan
+</div>

@@ -227,7 +227,8 @@ def fetch_all_tracks(session_id, access_token):
                                 'name': track['name'],
                                 'artists': [artist['name'] for artist in track['artists']],
                                 'album': track['album']['name'],
-                                'uri': track['uri']
+                                'uri': track['uri'],
+                                'playlist_name': playlist_name
                             })
                             
             except Exception as e:
@@ -378,7 +379,7 @@ def get_random_song():
     random_track_name = random_track_info['name']
     track_image_url = random_track_info.get('album', {}).get('images', [{}])[0].get('url')
     artist_name = random_track_info['artists'][0] if random_track_info['artists'] else 'Unknown Artist'
-    playlist_name = random_track_info.get('playlist', 'Unknown Playlist')
+    playlist_name = random_track_info.get('playlist_name', 'Unknown Playlist')
     
     return render_template('home.html', random_track=random_track_name, track_image_url=track_image_url, artist_name=artist_name, playlist_name=playlist_name)
 
@@ -534,23 +535,34 @@ def on_roll(data):
         
         # Get track IDs for each user
         user_track_ids = {}
+        user_track_playlists = {}
+        
         for user_id in room['users']:
             if user_id in user_tracks:
-                user_track_ids[user_id] = {track['id'] for track in user_tracks[user_id]}
+                user_track_ids[user_id] = {track['id']: track for track in user_tracks[user_id]}
+                user_track_playlists[user_id] = {track['id']: track.get('playlist_name', 'Unknown Playlist') for track in user_tracks[user_id]}
                 app.logger.info(f"User {user_id} has {len(user_track_ids[user_id])} tracks")
             else:
                 app.logger.error(f"No tracks found for user {user_id}")
                 return {'error': 'Some users have not loaded their tracks yet'}
         
         # Find intersection of track IDs
-        shared_track_ids = set.intersection(*user_track_ids.values())
+        shared_track_ids = set.intersection(*[set(tracks.keys()) for tracks in user_track_ids.values()])
         app.logger.info(f"Found {len(shared_track_ids)} shared tracks")
         
-        # Get full track info for shared tracks
+        # Get full track info for shared tracks with playlist information
         shared_tracks = []
-        for track in user_tracks[session_id]:  # Use current user's track info
-            if track['id'] in shared_track_ids:
-                shared_tracks.append(track)
+        for track_id in shared_track_ids:
+            # Use the first user's track info as base
+            first_user_id = list(user_track_ids.keys())[0]
+            track = user_track_ids[first_user_id][track_id]
+            
+            # Collect playlists from all users
+            track['playlists'] = {
+                user_id: user_track_playlists[user_id][track_id] 
+                for user_id in user_track_ids.keys()
+            }
+            shared_tracks.append(track)
         
         room['shared_tracks'] = shared_tracks
         app.logger.info(f"Stored {len(shared_tracks)} shared tracks in room")
@@ -566,8 +578,14 @@ def on_roll(data):
     # Remove the track so it won't be selected again
     room['shared_tracks'].remove(track)
     
-    # Emit the track to all users in the room
-    emit('song_rolled', {'song': track}, room=room_code)
+    # Emit the track to all users in the room, including playlist information
+    emit('song_rolled', {
+        'song': {
+            'name': track['name'],
+            'artist': ', '.join(track['artists']),
+            'playlists': ', '.join(track['playlists'].values())
+        }
+    }, room=room_code)
     
     return {'success': True}
 
