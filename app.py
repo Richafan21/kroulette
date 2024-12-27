@@ -1,4 +1,5 @@
 import logging
+import os
 
 # Configure logging
 logging.basicConfig(
@@ -24,10 +25,32 @@ from collections import defaultdict
 import uuid
 from flask_socketio import SocketIO, emit, join_room, leave_room
 import pkg_resources
+from flask_session import Session
+from redis import Redis
 
 app = Flask(__name__)
 app.secret_key = 'FzoY?LYL5moT:Iex"m18/0.pa!K-wG'
-app.config['SESSION_TYPE'] = 'filesystem'
+
+# Configure Redis session
+redis_host = os.getenv('REDIS_HOST', 'localhost')  # Default to localhost for local testing
+redis_port = int(os.getenv('REDIS_PORT', 6379))
+redis_password = os.getenv('REDIS_PASSWORD', None)  # Default to None if no password is needed
+
+app.config['SESSION_TYPE'] = 'redis'
+app.config['SESSION_PERMANENT'] = False
+app.config['SESSION_USE_SIGNER'] = True
+app.config['SESSION_KEY_PREFIX'] = 'session:'
+app.config['SESSION_REDIS'] = Redis(
+    host=redis_host,
+    port=redis_port,
+    password=redis_password,
+    charset='utf-8',
+    decode_responses=True
+)
+
+# Initialize the session
+Session(app)
+
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
