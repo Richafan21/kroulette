@@ -1,5 +1,6 @@
 import logging
 import os
+import redis
 
 # Configure logging
 logging.basicConfig(
@@ -28,7 +29,8 @@ import pkg_resources
 
 app = Flask(__name__)
 app.secret_key = 'FzoY?LYL5moT:Iex"m18/0.pa!K-wG'
-app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_TYPE'] = 'redis'
+app.config['SESSION_REDIS'] = redis.from_url('redis://red-ctmtdsbtq21c73fc2r10:6379')
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
