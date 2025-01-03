@@ -9,13 +9,12 @@
 </head>
 <body>
     <header>
-        <h1>Kroulette</h1>
     </header>
     <main>
-        <h2>Welcome!</h2>
+        <h2>Welcome to Kroulette!</h2>
         
         <div class="container">
-            <div class="room-options">
+            <div class="room-options" style="display: flex; justify-content: center;">
                 <div class="create-room">
                     <h2>Create a Room</h2>
                     <a href="{{ url_for('create_room') }}" class="btn">Create New Room</a>
@@ -49,7 +48,7 @@
             </div>
         {% endif %}
 
-        <div class="logout-btn">
+        <div class="logout-btn" style="margin-top: 20px;">
             <a href="{{ url_for('logout') }}" class="btn">Log Out</a>
         </div>
     </main>

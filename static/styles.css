@@ -385,6 +385,11 @@ p {
     background-color: #14833b;
 }
 
+.logout-button {
+    margin-top: 20px;
+    text-align: center;
+}
+
 /* Responsive adjustments */
 @media (max-width: 600px) {
     h1 {
