@@ -11,7 +11,7 @@
     <header>
     </header>
     <main>
-        <h2>Welcome to Kroulette!</h2>
+        <h2 style="text-align: center;">Welcome to Kroulette!</h2>
         
         <div class="container">
             <div class="room-options" style="display: flex; justify-content: center;">
@@ -24,7 +24,7 @@
                     <h2>Join a Room</h2>
                     <div class="join-form">
                         <input type="text" id="room-code" placeholder="Enter Room Code" maxlength="6">
-                        <button onclick="joinRoom()" class="btn">Join Room</button>
+                        <button onclick="joinRoom()" class="btn" style="margin-left: 10px;">Join Room</button>
                     </div>
                 </div>
             </div>
@@ -48,7 +48,7 @@
             </div>
         {% endif %}
 
-        <div class="logout-btn" style="margin-top: 20px;">
+        <div class="logout-button" style="margin-top: 20px; text-align: center;">
             <a href="{{ url_for('logout') }}" class="btn">Log Out</a>
         </div>
     </main>
