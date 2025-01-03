@@ -29,8 +29,23 @@
         {% endif %}
     </div>
     
-    <footer style="text-align: center; padding: 10px 0;">
-        <hr style="border-color: white; width: 50%; margin: 0 auto;">
+    <style>
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            padding: 10px;
+            background-color: white;
+        }
+        .footer hr {
+            width: max-content;
+            margin: 0 auto;
+            border-color: black;
+        }
+    </style>
+    <footer class="footer">
+        <hr>
         <p>&copy; 2025 Kroulette by Richard Fan <a href="https://open.spotify.com" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/8/84/Spotify_icon.svg" alt="Spotify Logo" style="width: 20px; vertical-align: middle;"></a></p>
     </footer>
 </body>
