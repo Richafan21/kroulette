@@ -47,7 +47,7 @@ app.logger.info(f"Using spotipy version: {spotipy_version}")
 socketio = SocketIO(app)
 
 # Configure Flask session to be more robust
-app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
+app.config['SESSION_COOKIE_SECURE'] = True  # Set to True in production with HTTPS
 
 # Spotify API credentials and settings
 CLIENT_ID = '04703f4623b846f1ae4202c56e9424ff'

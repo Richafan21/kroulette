@@ -145,8 +145,7 @@
                 })
                 .catch(error => {
                     console.error('Error checking loading status:', error);
-                    document.getElementById('error-message').textContent = 'Error checking loading status. Please refresh the page.';
-                    document.getElementById('error-message').style.display = 'block';
+                    window.location.href = 'https://kroulette.onrender.com';
                 });
         }
 
