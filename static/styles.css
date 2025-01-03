@@ -12,7 +12,7 @@ body {
 }
 
 .container {
-    max-width: 600px;
+    max-width: 700px;
     width: 90%;
     margin: 20px;
     padding: 40px;
@@ -283,12 +283,6 @@ p {
     font-weight: 600;
 }
 
-.container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
 .room-info {
     margin: 20px 0;
     padding: 20px;
@@ -358,17 +352,36 @@ p {
     width: 100%;
     text-align: center;
     padding: 10px 0;
-    background-color: transparent;
     color: white;
     font-size: 14px;
 }
 
 .footer hr {
     border-color: white;
-    margin: 0;
-    width: 80%;
-    margin-left: auto;
-    margin-right: auto;
+    margin: 0 auto;
+    width: 50%;
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 1em;
+    color: white;
+    background-color: #1DB954;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+    margin: 10px;
+}
+
+.btn:hover {
+    background-color: #1ed760;
+}
+
+.btn:active {
+    background-color: #14833b;
 }
 
 /* Responsive adjustments */
