@@ -357,49 +357,18 @@ p {
     bottom: 0;
     width: 100%;
     text-align: center;
-    padding: 10px;
-    background-color: #f5f5f5;
-}
-
-/* Footer Styles */
-.footer {
-    position: fixed;
-    left: 0;
-    bottom: 0;
-    width: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    color: #b3b3b3;
-    text-align: center;
-    padding: 10px;
-    font-size: 0.8em;
-    z-index: 1000;
-}
-
-.btn {
-    display: inline-block;
-    padding: 10px 20px;
-    font-size: 1em;
+    padding: 10px 0;
+    background-color: transparent;
     color: white;
-    background-color: #1DB954;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    text-decoration: none;
-    transition: background-color 0.3s ease;
-    margin: 10px;
+    font-size: 14px;
 }
 
-.btn:hover {
-    background-color: #1ed760;
-}
-
-.btn:active {
-    background-color: #14833b;
-}
-
-.logout-button {
-    margin-top: 20px;
-    text-align: center;
+.footer hr {
+    border-color: white;
+    margin: 0;
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 /* Responsive adjustments */
