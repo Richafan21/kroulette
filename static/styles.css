@@ -297,6 +297,11 @@ p {
     text-align: center;
 }
 
+.room-options {
+    padding: 20px;
+    border-radius: 10px;
+}
+
 .room-code {
     font-size: 2em;
     font-weight: bold;
@@ -341,6 +346,12 @@ p {
     border-radius: 10px;
 }
 
+.join-form {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
 .footer {
     position: fixed;
     bottom: 0;
@@ -375,6 +386,7 @@ p {
     cursor: pointer;
     text-decoration: none;
     transition: background-color 0.3s ease;
+    margin: 10px;
 }
 
 .btn:hover {
